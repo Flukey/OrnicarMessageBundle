@@ -5,6 +5,7 @@ namespace Ornicar\MessageBundle\Controller;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\DependencyInjection\ContainerAware;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Ornicar\MessageBundle\Provider\ProviderInterface;
 
 class MessageController extends ContainerAware
@@ -66,23 +67,26 @@ class MessageController extends ContainerAware
      *
      * @return Response
      */
-    public function newThreadAction()
+    public function newThreadAction(Request $request)
     {
+        $recipient = $request->query->get('user');
         $form = $this->container->get('ornicar_message.new_thread_form.factory')->create();
         $formHandler = $this->container->get('ornicar_message.new_thread_form.handler');
-
+        
         if ($message = $formHandler->process($form)) {
-            return new RedirectResponse($this->container->get('router')->generate('ornicar_message_thread_view', array(
+            return new RedirectResponse($this->container->get('router')->generate('ornicar_message_thread_view',
+            array(
                 'threadId' => $message->getThread()->getId()
             )));
         }
 
-        return $this->container->get('templating')->renderResponse('OrnicarMessageBundle:Message:newThread.html.twig', array(
+        return $this->container->get('templating')->renderResponse('OrnicarMessageBundle:Message:newThread.html.twig',
+        array(
             'form' => $form->createView(),
-            'data' => $form->getData()
+            'data' => $form->getData(),
+            'recipient' => $recipient
         ));
     }
-
     /**
      * Deletes a thread
      *
